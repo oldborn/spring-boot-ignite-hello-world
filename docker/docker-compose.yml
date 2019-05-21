@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  web-console-standalone:
+    ports:
+      - '80:80'
+      - '3001:3001'
+    volumes:
+      - '/var/data:/var/lib/mongodb'
+    container_name: ignite-web-console
+    image: apacheignite/web-console-standalone

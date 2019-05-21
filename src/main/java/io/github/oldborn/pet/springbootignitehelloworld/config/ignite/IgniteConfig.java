@@ -2,33 +2,55 @@ package io.github.oldborn.pet.springbootignitehelloworld.config.ignite;
 
 import io.github.oldborn.pet.springbootignitehelloworld.resource.something.SomethingDTO;
 import io.github.oldborn.pet.springbootignitehelloworld.resource.something.SomethingRepository;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.springdata20.repository.config.EnableIgniteRepositories;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 
 @Configuration
 @EnableIgniteRepositories(basePackageClasses = SomethingRepository.class)
+@ConfigurationProperties("ignite")
 public class IgniteConfig {
 
-    @Bean
-    public void somrere() throws ClassNotFoundException, SQLException {
 
-        Class.forName("org.apache.ignite.IgniteJdbcThinDriver");
-        Connection conn = DriverManager.getConnection("jdbc:ignite:thin://127.0.0.1/");
-    }
+    @Getter @Setter
+    private Integer nofClusterNodes = 3;
 
     @Bean
     public Ignite igniteInstance() {
         IgniteConfiguration config = new IgniteConfiguration();
+
+        config.setIgniteInstanceName("something-node-server-0");
+        CacheConfiguration cache = new CacheConfiguration("somethingCache");
+        cache.setIndexedTypes(Integer.class, SomethingDTO.class);
+
+        config.setCacheConfiguration(cache);
+        return Ignition.start(config);
+    }
+
+    @Bean
+    public void igniteInstances() {
+        for (int i = 1; i<=(nofClusterNodes -1); i++){
+            IgniteConfiguration config = new IgniteConfiguration();
+            config.setIgniteInstanceName("something-node-server-"+i);
+            CacheConfiguration cache = new CacheConfiguration("somethingCache");
+            cache.setIndexedTypes(Integer.class, SomethingDTO.class);
+            config.setCacheConfiguration(cache);
+            Ignition.start(config);
+        }
+    }
+
+    @Bean
+    public Ignite igniteInstanceClient() {
+        IgniteConfiguration config = new IgniteConfiguration();
+        config.setClientMode(true);
+        config.setIgniteInstanceName("something-node-client");
 
         CacheConfiguration cache = new CacheConfiguration("somethingCache");
         cache.setIndexedTypes(Integer.class, SomethingDTO.class);
