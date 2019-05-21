@@ -25,30 +25,6 @@ public class IgniteConfig {
     @Bean
     public Ignite igniteInstance() {
         IgniteConfiguration config = new IgniteConfiguration();
-
-        config.setIgniteInstanceName("something-node-server-0");
-        CacheConfiguration cache = new CacheConfiguration("somethingCache");
-        cache.setIndexedTypes(Integer.class, SomethingDTO.class);
-
-        config.setCacheConfiguration(cache);
-        return Ignition.start(config);
-    }
-
-    @Bean
-    public void igniteInstances() {
-        for (int i = 1; i<=(nofClusterNodes -1); i++){
-            IgniteConfiguration config = new IgniteConfiguration();
-            config.setIgniteInstanceName("something-node-server-"+i);
-            CacheConfiguration cache = new CacheConfiguration("somethingCache");
-            cache.setIndexedTypes(Integer.class, SomethingDTO.class);
-            config.setCacheConfiguration(cache);
-            Ignition.start(config);
-        }
-    }
-
-    @Bean
-    public Ignite igniteInstanceClient() {
-        IgniteConfiguration config = new IgniteConfiguration();
         config.setClientMode(true);
         config.setIgniteInstanceName("something-node-client");
 
