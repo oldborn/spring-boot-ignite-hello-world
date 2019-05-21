@@ -1,0 +1,16 @@
+spring:
+  profiles:
+    active: client
+
+---
+spring:
+  profiles: client
+server:
+  port: 5061
+---
+spring:
+  profiles: server
+server:
+  port: 5060
+ignite:
+  nof-cluster-nodes: 5

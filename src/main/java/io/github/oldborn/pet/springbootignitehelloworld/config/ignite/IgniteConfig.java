@@ -9,9 +9,11 @@ import org.apache.ignite.Ignition;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.springdata20.repository.config.EnableIgniteRepositories;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 @Configuration
 @EnableIgniteRepositories(basePackageClasses = SomethingRepository.class)
@@ -22,31 +24,29 @@ public class IgniteConfig {
     @Getter @Setter
     private Integer nofClusterNodes = 3;
 
+    @Autowired
+    private Environment environment;
+
     @Bean
     public Ignite igniteInstance() {
-        IgniteConfiguration config = new IgniteConfiguration();
-
-        config.setIgniteInstanceName("something-node-server-0");
-        CacheConfiguration cache = new CacheConfiguration("somethingCache");
-        cache.setIndexedTypes(Integer.class, SomethingDTO.class);
-
-        config.setCacheConfiguration(cache);
-        return Ignition.start(config);
-    }
-
-    @Bean
-    public void igniteInstances() {
-        for (int i = 1; i<=(nofClusterNodes -1); i++){
-            IgniteConfiguration config = new IgniteConfiguration();
-            config.setIgniteInstanceName("something-node-server-"+i);
-            CacheConfiguration cache = new CacheConfiguration("somethingCache");
-            cache.setIndexedTypes(Integer.class, SomethingDTO.class);
-            config.setCacheConfiguration(cache);
-            Ignition.start(config);
+        if(environment.getActiveProfiles()[0].equalsIgnoreCase("server")){
+            Ignite firstIgnite = null;
+            for (int i = 0; i<=(nofClusterNodes); i++){
+                IgniteConfiguration config = new IgniteConfiguration();
+                config.setIgniteInstanceName("something-node-server-"+i);
+                CacheConfiguration cache = new CacheConfiguration("somethingCache");
+                cache.setIndexedTypes(Integer.class, SomethingDTO.class);
+                config.setCacheConfiguration(cache);
+                Ignite ignited = Ignition.start(config);
+                if (firstIgnite == null) firstIgnite = ignited;
+            }
+            igniteInstanceClient();
+            return firstIgnite;
+        }else{
+            return igniteInstanceClient();
         }
     }
 
-    @Bean
     public Ignite igniteInstanceClient() {
         IgniteConfiguration config = new IgniteConfiguration();
         config.setClientMode(true);
